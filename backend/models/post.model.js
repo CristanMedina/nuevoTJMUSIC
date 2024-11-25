@@ -76,13 +76,13 @@ const postSchema = new mongoose.Schema({
     },
     postType: {
         type: String,
-        enum: ['regular', 'song', 'event'],
+        enum: ['standard', 'song', 'event'],
         required: true
     }
-});
+}, {timestamps: true,});
 
 const songPostSchema = new mongoose.Schema({
-    ...postSchema,
+    ...postSchema.obj,
     songInfo: {
         title: {
             type: String,
@@ -120,12 +120,11 @@ const songPostSchema = new mongoose.Schema({
         }]
     }
 }, {
-    timestamps: true,
     discriminatorKey: 'postType'
 });
 
 const eventPostSchema = new mongoose.Schema({
-    ...postSchema,
+    ...postSchema.obj,
     eventInfo: {
         title: {
             type: String,
@@ -174,19 +173,16 @@ const eventPostSchema = new mongoose.Schema({
         meetLink: String
     }
 }, {
-    timestamps: true,
     discriminatorKey: 'postType'
 });
 
 const standardPostSchema = new mongoose.Schema({
-    ...postSchema,
-
+    ...postSchema.obj,
 }, {
-    timestamps: true,
     discriminatorKey: 'postType'
 });
 
-const PostModel = mongoose.model('Post', regularPostSchema);
+const PostModel = mongoose.model('Post', postSchema);
 
 const SongPost = PostModel.discriminator('song', songPostSchema);
 const EventPost = PostModel.discriminator('event', eventPostSchema);

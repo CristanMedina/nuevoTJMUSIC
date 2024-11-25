@@ -189,10 +189,29 @@ export const checkAuth = async (req, res) => {
         if (!user) {
             return res.status(400).json({ success: false, message: "Usuario no encontrado" });
         }
-
         res.status(200).json({ success: true, user: { ...user._doc, password: undefined } });
     } catch (error) {
         console.error("Error en CheckAuth:", error);
         res.status(500).json({ success: false, message: error.message });
+    }
+};
+
+export const checkAuthMiddleware = async (req, res, next) => {
+    try {
+        const user = await User.findById(req.userId);
+        if (!user) {
+            return res.status(401).json({
+                success: false,
+                message: "Usuario no encontrado"
+            });
+        }
+        req.user = user;
+        next();
+    } catch (error) {
+        console.error("Error en CheckAuth:", error);
+        res.status(500).json({
+            success: false,
+            message: error.message
+        });
     }
 };
