@@ -151,7 +151,7 @@ const eventPostSchema = new mongoose.Schema({
         },
         eventType: {
             type: String,
-            enum: ['concert', 'jam_session', 'workshop', 'masterclass', 'other'],
+            enum: ['concierto', 'jam_session', 'taller', 'festival', 'otro'],
             required: true
         },
         ticketPrice: {
