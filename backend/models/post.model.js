@@ -105,8 +105,6 @@ const songPostSchema = new mongoose.Schema({
             type: String,
             trim: true
         },
-        bpm: Number,
-        key: String,
         duration: Number,
         collaborators: [{
             user: {
