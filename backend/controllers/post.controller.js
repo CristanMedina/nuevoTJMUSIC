@@ -1,52 +1,59 @@
 import  { PostModel, SongPost, EventPost, StandardPost } from '../models/post.model.js';
 
-export const createPost = async(req, res) => {
+export const createPost = async (req, res) => {
     try {
-        const { postType } = req.body;
+        const { postType, content, tags, eventInfo, songInfo } = req.body;
         let post;
 
+        // Validate postType-specific fields
         switch (postType) {
             case 'song':
+                if (!songInfo?.title || !songInfo?.genre) {
+                    return res.status(400).json({ message: "Missing required song information" });
+                }
                 post = new SongPost({
                     ...req.body,
-                    author: req.user._id
+                    author: req.user._id,
                 });
-            break;
+                break;
 
             case 'event':
+                if (!eventInfo?.title || !eventInfo?.startDate || !eventInfo?.venue?.name) {
+                    return res.status(400).json({ message: "Missing required event information" });
+                }
                 post = new EventPost({
                     ...req.body,
-                    author: req.user._id
+                    author: req.user._id,
                 });
-            break;
+                break;
 
             case 'standard':
                 post = new StandardPost({
                     ...req.body,
-                    author: req.user._id
+                    author: req.user._id,
                 });
-            break;
+                break;
 
             default:
-                return res.status(400).json({ message: "Tipo de publicacion invalida" });
+                return res.status(400).json({ message: "Invalid post type" });
         }
 
+        // Save the post and populate the author
         await post.save();
         await post.populate('author', 'name');
 
         res.status(201).json({
-            message: 'Publicacion creada con exito',
-            post
+            message: 'Publicación creada con éxito',
+            post,
         });
-
     } catch (error) {
-        console.error(error)
+        console.error('Error creating post:', error);
         res.status(500).json({
-            message: 'Error creando publicacion',
-            error: error.message
+            message: 'Error creando publicación',
+            error: error.message,
         });
     }
-}
+};
 
 export const getPosts = async (req, res) => {
     try {
@@ -205,30 +212,30 @@ export const likePost = async (req, res) => {
         const post = await PostModel.findById(req.params.id);
 
         if (!post) {
-            return res.status(404).json({ message: 'Post no encontrado' });
+            return res.status(404).json({ message: 'Post not found' });
         }
 
-        const likeIndex = post.likes.indexOf(req.user._id);
+        const isLiked = post.likes.includes(req.user._id);
 
-        if (likeIndex === -1) {
-            post.likes.push(req.user._id);
+        if (isLiked) {
+            post.likes = post.likes.filter((userId) => userId.toString() !== req.user._id.toString());
         } else {
-            post.likes.splice(likeIndex, 1);
+            post.likes.push(req.user._id);
         }
 
         await post.save();
 
         res.json({
-            message: likeIndex === -1 ? 'Like agregado' : 'Like removido',
-            likes: post.likes.length
+            message: isLiked ? 'Like removed' : 'Like added',
+            likes: post.likes,
         });
     } catch (error) {
         res.status(500).json({
-            message: 'Error al agregar like',
-            error: error.message
+            message: 'Error toggling like',
+            error: error.message,
         });
     }
-}
+};
 
 export const commentPost = async (req, res) => {
     try {
